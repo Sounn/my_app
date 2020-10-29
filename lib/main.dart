@@ -7,7 +7,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Welcome to Flutter',
+      theme: ThemeData(
+        primaryColor: Colors.pink[50],
+      ),
       home: RandomWords()
     );
   }
@@ -15,12 +17,45 @@ class MyApp extends StatelessWidget {
 
 class RandomWordsState extends State<RandomWords>{
   final _suggestions = <WordPair>[];
+  final _saved = Set<WordPair>();
   final _biggerFont = const TextStyle(fontSize:18.0);
+  void _pushSaved() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context){
+          final tiles = _saved.map(
+            (WordPair pair){
+              return ListTile(
+                title: Text(
+                  pair.asPascalCase,
+                  style: _biggerFont,
+                ),
+              );
+            },
+          );
+          final divided = ListTile.divideTiles(
+            context: context,
+            tiles: tiles,
+          ).toList();
+
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('お気に入り'),
+            ),
+            body: ListView(children: divided),
+          );
+        },
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context){
     return Scaffold(
       appBar: AppBar(
-        title: Text('無限name作成'),
+        title: Text('名前の無限生成'),
+        actions : [
+          IconButton(icon: Icon(Icons.playlist_add_check), onPressed: _pushSaved),
+        ],
       ),
       body: _buildSuggestions(),
       );
@@ -41,11 +76,25 @@ class RandomWordsState extends State<RandomWords>{
   }
 
   Widget _buildRow(WordPair pair) {
+    final alreadySaved = _saved.contains(pair);
   return ListTile(
     title: Text(
       pair.asPascalCase,
       style: _biggerFont,
     ),
+    trailing: Icon(
+      alreadySaved ? Icons.star : Icons.star_border,
+      color: alreadySaved ? Colors.yellow : null,
+    ),
+    onTap: () {
+      setState((){
+        if (alreadySaved){
+          _saved.remove(pair);
+        } else {
+          _saved.add(pair);
+        }
+      });
+    }
   );
   }
 }
